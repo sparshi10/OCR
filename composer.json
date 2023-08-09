@@ -1,0 +1,10 @@
+{
+    "name": "vendor1/autoload.php",
+    "description": "OCR",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "thiagoalessio/tesseract_ocr": "^2.12",
+        "predis/predis": "^2.2"
+    }
+}
