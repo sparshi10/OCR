@@ -1,4 +1,8 @@
-#!C:\Python310\python.exe
+<!-- application/views/face_match_view.php -->
+
+<?php
+$scriptContent = <<<EOT
+#!/usr/bin/env python
 import face_recognition
 import face_recognition_models
 import numpy as np
@@ -25,9 +29,9 @@ def compare_faces(image_path_1, image_path_2, threshold=0.6):
 
         # Check if any of the face pairs have a distance less than the threshold
         if any(face_distance < threshold for face_distance in face_distances):
-            result = {"face_match_percentage": "Face Matched"}
+            result = {"face_match_result": "Face Matched"}
         else:
-            result = {"face_match_percentage": "Rejected"}
+            result = {"face_match_result": "Rejected"}
 
     return json.dumps(result)
 
@@ -43,3 +47,18 @@ if __name__ == "__main__":
 
     result = compare_faces(image_path_1, image_path_2)
     print(result)
+EOT;
+
+$tempScriptPath = APPPATH . '../application/cache/temp_script.py';
+file_put_contents($tempScriptPath, $scriptContent);
+
+// Construct the command to execute the temporary script
+$command = "python $tempScriptPath $image1_path $image2_path";
+$output = shell_exec($command . ' 2>&1');
+
+// Clean up: Delete the temporary script file
+unlink($tempScriptPath);
+
+// Process the output and return the result to the controller
+echo json_encode(array('face_match_opinion' => $output));
+?>

@@ -2,7 +2,7 @@
 
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Api extends CI_Controller {
+class ScriptAPI extends CI_Controller {
 
     public function __construct() {
         parent::__construct();
@@ -14,26 +14,16 @@ class Api extends CI_Controller {
     }
 
     public function image_match() {
-        //session_time_out
-//        ini_set('max_execution_time', 120);
-        error_log(print_r($_POST,true));
-        
         // Ensure the request method is POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405); // Method Not Allowed
             echo json_encode(array('error' => 'Method Not Allowed'));
             return;
         }
-        // Check if both images are provided in the request
-//        if (!isset($_POST['image1']) || !isset($_POST['image2'])) {
-//            http_response_code(400); // Bad Request
-//            echo json_encode(array('error' => 'Please provide both images.'));
-//            return;
-//        }
+
         $base64_image1 = $_POST['image1'];
         $base64_image2 = $_POST['image2'];
-        
-        // Set the uploads directory path
+
         $uploads_directory = APPPATH . '../uploads/';
 
         // Generate unique file names for the images
@@ -48,29 +38,13 @@ class Api extends CI_Controller {
         $image1_path = $this->convertAndSaveImage($base64_image1, $uploads_directory, 'image1');
         $image2_path = $this->convertAndSaveImage($base64_image2, $uploads_directory, 'image2');
 
+        // Load the view and pass necessary data
+        $data = array(
+            'image1_path' => $image1_path,
+            'image2_path' => $image2_path,
+        );
 
-        // Call the Python script for face matching
-        $python_executable = 'python'; // Use the correct Python executable path. This is Python interpreter
-        $script_path = APPPATH . '../uploads/match_face.py';
-
-        // Escaping shell arguments to prevent command injection
-        $image1_path = escapeshellarg($image1_path);
-        $image2_path = escapeshellarg($image2_path);
-
-        $command = "$python_executable $script_path $image1_path $image2_path";
-
-        // Use shell_exec with 2>&1 to capture both stdout and stderr
-        $output = shell_exec($command . ' 2>&1');
-
-        try {
-            $face_match_result = json_decode($output, true);
-            $face_match_percentage = $face_match_result['face_match_percentage'];
-        } catch (Exception $e) {
-            $face_match_percentage = -1;
-        }
-
-        // Return the match percentage as a JSON response
-        echo json_encode(array('face_match_opinion' => $face_match_percentage));
+        $this->load->view('script/script_view.php', $data);
     }
 
     private function generateUniqueFilename($prefix, $extension) {
@@ -94,5 +68,4 @@ class Api extends CI_Controller {
 
         return $image_path;
     }
-
 }
